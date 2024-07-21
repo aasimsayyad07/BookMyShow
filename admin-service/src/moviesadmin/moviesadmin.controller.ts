@@ -13,6 +13,7 @@ import {
 import { MoviesadminService } from './moviesadmin.service';
 import { AddMovie } from './dto/addMovie.dto';
 import { Response } from 'express';
+import { UpdateMovie } from './dto/updateMoview.dto';
 
 @Controller('admin-service')
 export class MoviesadminController {
@@ -24,9 +25,14 @@ export class MoviesadminController {
     return this.moviesadminService.addMovie(addMovieData);
   }
 
-  @Put('updateMovie')
-  updateMovie() {
-    return this.moviesadminService.updateMovie();
+  @Put(':movieId/updateMovie')
+  @UsePipes(ValidationPipe)
+  updateMovie(
+    @Param('movieId', ParseUUIDPipe) id: string,
+    @Body() updateMovieDto: UpdateMovie,
+    @Res() response: Response,
+  ) {
+    return this.moviesadminService.updateMovie(id, updateMovieDto, response);
   }
 
   @Delete(':movieId/RemoveMovie')
