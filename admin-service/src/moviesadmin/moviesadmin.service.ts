@@ -8,7 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Movie } from './entity/movie.entity';
 import { Repository } from 'typeorm';
 import { Response } from 'express';
-import { UpdateMovie } from './dto/updateMoview.dto';
+import { UpdateMovie } from './dto/updateMovie.dto';
 
 @Injectable()
 export class MoviesadminService {
@@ -32,6 +32,26 @@ export class MoviesadminService {
     }
   }
 
+  async getMovie(id: string, response: Response) {
+    try {
+      const movie = await this.movieRepository.findOne({
+        where: { movieId: id },
+      });
+
+      if (!movie) {
+        return response.status(HttpStatus.NOT_FOUND).json({
+          message: 'movieID is not validate',
+          statusCode: HttpStatus.NOT_FOUND,
+        });
+      }
+
+      return response.status(HttpStatus.OK).json(movie);
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException();
+    }
+  }
+
   async updateMovie(
     id: string,
     updateMovieDto: UpdateMovie,
@@ -49,19 +69,36 @@ export class MoviesadminService {
         });
       }
 
-      const result = await this.movieRepository.update(
-        { movieId: id },
-        {
-          movieIMD: updateMovieDto.movieIMD,
-          movieInitialPrice: updateMovieDto.movieInitialPrice,
-        },
-      );
-
-      if (!result) {
-        return response.status(HttpStatus.NOT_MODIFIED).json({
-          message: 'Movie details update failed',
-          statusCode: HttpStatus.NOT_MODIFIED,
+      if (updateMovieDto.movieIMD && !updateMovieDto.movieInitialPrice) {
+        await this.movieRepository.update(
+          { movieId: id },
+          {
+            movieIMD: updateMovieDto.movieIMD,
+          },
+        );
+      } else if (!updateMovieDto.movieIMD && updateMovieDto.movieInitialPrice) {
+        await this.movieRepository.update(
+          { movieId: id },
+          {
+            movieInitialPrice: updateMovieDto.movieInitialPrice,
+          },
+        );
+      } else if (
+        !updateMovieDto.movieIMD ||
+        !updateMovieDto.movieInitialPrice
+      ) {
+        return response.status(HttpStatus.BAD_REQUEST).json({
+          message: 'BAD Request',
+          statusCode: HttpStatus.BAD_REQUEST,
         });
+      } else {
+        await this.movieRepository.update(
+          { movieId: id },
+          {
+            movieIMD: updateMovieDto.movieIMD,
+            movieInitialPrice: updateMovieDto.movieInitialPrice,
+          },
+        );
       }
 
       return response.status(HttpStatus.OK).json({

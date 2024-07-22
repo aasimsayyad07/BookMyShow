@@ -9,11 +9,13 @@ import {
   Param,
   ParseUUIDPipe,
   Res,
+  Get,
 } from '@nestjs/common';
 import { MoviesadminService } from './moviesadmin.service';
 import { AddMovie } from './dto/addMovie.dto';
 import { Response } from 'express';
-import { UpdateMovie } from './dto/updateMoview.dto';
+import { UpdateMovie } from './dto/updateMovie.dto';
+import { BodyValidatePipe } from 'src/pipe/bodyValidate.pipe';
 
 @Controller('admin-service')
 export class MoviesadminController {
@@ -25,8 +27,16 @@ export class MoviesadminController {
     return this.moviesadminService.addMovie(addMovieData);
   }
 
+  @Get(':movieId/getMovie')
+  getMovie(
+    @Param('movieId', ParseUUIDPipe) id: string,
+    @Res() response: Response,
+  ) {
+    return this.moviesadminService.getMovie(id, response);
+  }
+
   @Put(':movieId/updateMovie')
-  @UsePipes(ValidationPipe)
+  @UsePipes(BodyValidatePipe)
   updateMovie(
     @Param('movieId', ParseUUIDPipe) id: string,
     @Body() updateMovieDto: UpdateMovie,
